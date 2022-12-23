@@ -1,0 +1,8 @@
+streamlit
+pychatgpt
+openai
+revchatgpt
+pyttsx3 
+pyaudio
+whisper
+speechrecognition

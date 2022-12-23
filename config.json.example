@@ -1,0 +1,4 @@
+{
+    "api_key": "< OPENAI API KEY GOES HERE >",
+    "session_token": "< OPENAI SESSION TOKEN GOES HERE >"
+}
