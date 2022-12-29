@@ -1,4 +1,3 @@
-import time
 from datetime import datetime
 
 import streamlit as st
@@ -7,10 +6,9 @@ from chat import SUPPORTED_CHATBOTS, get_chatbot
 from record import SUPPORTED_RECOGNIZER, SpeechRecognizer
 from speak import Speaker
 
-# Wake word
-WAKE_WORD = "jarvis"
 
 # Config defaults
+WAKE_WORD = "jarvis"
 config = "config.json"
 recognizer = "google"
 chatbot = "openai"
@@ -30,21 +28,18 @@ def stop_app():
 st.title("JiAIvus")
 st.markdown("Submit your config to start the chat")
 
-
 ## Sidebar
 start_app = False
 with st.sidebar:
     st.image("logo.png")
-    # Config submit form
+    # Config form
     with st.form("config"):
-        api_key = st.text_input("Enter your API key", type="password", key="api_key")
-        session_token = st.text_input(
-            "Or enter your session token", type="password", key="session_token"
-        )
-        recognizer = st.selectbox(
-            "Choose a recoginzer", SUPPORTED_RECOGNIZER, key="recognizer"
-        )
-        chatbot = st.selectbox("Choose chatbot", SUPPORTED_CHATBOTS, key="chatbot")
+        api_key = st.text_input("Enter your API key", type="password")
+        session_token = st.text_input("Or enter your session token", type="password")
+        recognizer = st.selectbox("Choose a recoginzer", SUPPORTED_RECOGNIZER)
+        chatbot = st.selectbox("Choose chatbot", SUPPORTED_CHATBOTS)
+
+        # Submit button
         submitted = st.form_submit_button("Submit")
         if submitted:
             print("config submitted")
@@ -52,6 +47,7 @@ with st.sidebar:
             if api_key or session_token:
                 config = {"api_key": api_key, "session_token": session_token}
             start_app = True
+
     if start_app:
         # Stop button
         cols = st.columns([1, 3])
@@ -108,6 +104,7 @@ try:
                         cols[1].download_button(
                             "Download conversation", file, file_name
                         )
+
 except Exception as e:
     # Error handling
     print(f"app failed with: {e}")

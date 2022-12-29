@@ -22,5 +22,6 @@ Run `run streamlit app.py`
 - [x] Add a download conversation button to the UI
 - [ ] Make app more responsive and stable
 - [ ] Make app stateful where it makes sense
-- [ ] Host app on free cloud instance
+- [x] Host app on free cloud instance
+- [ ] Enable hosted app to use browser audio and microphone
 - [ ] Get rich or die trying

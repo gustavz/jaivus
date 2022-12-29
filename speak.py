@@ -14,7 +14,6 @@ class Speaker:
         self.engine = pyttsx3.init()
         for key, value in self.kwargs.items():
             self.engine.setProperty(key, value)
-            print
 
     def _sleep_text(self, text):
         rate = self.engine.getProperty("rate")
