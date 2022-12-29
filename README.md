@@ -8,7 +8,7 @@ Leveraging open source APIs to create a personal assistant chatbot
 ## Installation
 
 1. Install requirements: `pip install -r requirements.txt`
-2. Copy `config.json.example` to `config.json` and fill in OpenAI `api_key` and optionally `session_token`.
+2. Copy `config.json.example` to `config.json` and fill in OpenAI `api_key` and optionally `session_token`
 
 ## Usage
 
@@ -21,5 +21,6 @@ Run `run streamlit app.py`
 - [x] Add a stop button to the UI
 - [x] Add a download conversation button to the UI
 - [ ] Make app more responsive and stable
+- [ ] Make app stateful where it makes sense
 - [ ] Host app on free cloud instance
 - [ ] Get rich or die trying
