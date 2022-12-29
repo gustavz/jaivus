@@ -4,9 +4,11 @@ import openai
 from pyChatGPT import ChatGPT
 from revChatGPT.ChatGPT import Chatbot
 
+SUPPORTED_CHATBOTS = ['openai', 'pychatgpt', 'revchatgpt']
+
 
 def get_chatbot(bot='openai', config='config.json'):
-    assert bot in ['openai', 'pychatgpt', 'revchatgpt']
+    assert bot in SUPPORTED_CHATBOTS
     if bot == 'openai':
         return OpenAIBot(config)
     elif bot == 'pychatgpt':
@@ -17,11 +19,13 @@ def get_chatbot(bot='openai', config='config.json'):
 
 class OpenAIBot:
     def __init__(self, config="config.json"):
-        config = json.load(open(config))
+        if isinstance(config, str):
+            config = json.load(open(config))
         openai.api_key = config['api_key']
         
     def chat(self, prompt, engine="text-davinci-003"):
         try:
+            print('start chat')
             response = openai.Completion.create(
                 engine=engine,
                 prompt=prompt,
@@ -46,6 +50,7 @@ class PyChatGPTBot:
         
     def chat(self, prompt):
         try:
+            print('start chat')
             response = self.bot.send_message(prompt)
             print(f'response: {response}')
             return response['message']
@@ -63,6 +68,7 @@ class RevPyChatGPTBot:
         
     def chat(self, prompt):
         try:
+            print('start chat')
             response = self.bot.ask(prompt)
             print(f'response: {response}')
             return response['message']

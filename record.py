@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
 import time
-
 import speech_recognition as sr
 
 
@@ -23,6 +21,7 @@ class SpeechRecognizer:
         with sr.Microphone() as source:
             print('start listening')
             audio = self.recognizer.listen(source)
+        print('stop listening')
 
         try:
             t = time.time()

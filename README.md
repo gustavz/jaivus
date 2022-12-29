@@ -16,8 +16,10 @@ Run `run streamlit app.py`
 
 ## To-dos
 
-- [ ] Add a reset button to the UI
-- [ ] Add config options to the UI
-- [ ] Add a download conversation button to the UI
-- [ ] Host app on free server instance
+- [x] Add logo to project and UI
+- [x] Add config options to the UI
+- [x] Add a stop button to the UI
+- [x] Add a download conversation button to the UI
+- [ ] Make app more responsive and stable
+- [ ] Host app on free cloud instance
 - [ ] Get rich or die trying
