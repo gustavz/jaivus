@@ -21,8 +21,9 @@ Run `run streamlit app.py`
 - [x] Add config options to the UI
 - [x] Add a stop button to the UI
 - [x] Add a download conversation button to the UI
-- [ ] Make app more responsive and stable
-- [ ] Make app stateful where it makes sense
+- [ ] Make the Stop button interruptive
+- [ ] Make the download button not reset the app
+- [ ] Add statefulness where it makes sense
 - [x] Host app on free cloud instance
 - [ ] Enable hosted app to use browser audio and microphone
 - [ ] Get rich or die trying
