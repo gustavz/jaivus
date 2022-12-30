@@ -20,7 +20,7 @@ SUPPORTED_RECOGNIZER = [
 ]
 
 
-class SpeechRecognizer:
+class Listener:
     def __init__(self, recognizer="google", duration=2, **kwargs):
         assert recognizer in SUPPORTED_RECOGNIZER
         print(f"initializing {recognizer} speech recognition engine")

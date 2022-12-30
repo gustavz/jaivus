@@ -3,7 +3,7 @@ from datetime import datetime
 import streamlit as st
 
 from chat import SUPPORTED_CHATBOTS, get_chatbot
-from record import SUPPORTED_RECOGNIZER, SpeechRecognizer
+from listen import SUPPORTED_RECOGNIZER, Listener
 from speak import Speaker
 
 
@@ -57,7 +57,7 @@ try:
     if start_app:
         print(f"start the app")
         # Initialize engines
-        listen = SpeechRecognizer(recognizer)
+        listen = Listener(recognizer)
         speak = Speaker()
         chat = get_chatbot(chatbot, config)
 
