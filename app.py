@@ -27,7 +27,10 @@ def stop_app():
 
 
 ## Streamlit app header
-st.title("JiAIvus")
+st.set_page_config(
+    page_title="jAIvus", page_icon="🧞", layout="centered", initial_sidebar_state="expanded"
+)
+st.title("🧞 jAIvus")
 st.markdown("Submit your config to start the chat")
 
 ## Sidebar
@@ -102,7 +105,7 @@ try:
                     with st.sidebar:
                         # Download conversation button
                         file = "\n".join(conversation)
-                        file_name = f"jiaivus_conversation_{str(datetime.now())}.txt"
+                        file_name = f"jaivus_conversation_{str(datetime.now())}.txt"
                         cols[1].download_button(
                             "Download conversation", file, file_name
                         )

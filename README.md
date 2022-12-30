@@ -1,4 +1,4 @@
-# JiAIvus [ʤɑ́ːvɪs]
+# 🧞 jAIvus [ʤɑ́ːvɪs]
 
 <img src="logo.png" height=200 width=200>
 
