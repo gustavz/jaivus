@@ -1,11 +1,14 @@
+import logging
 import time
 
 import pyttsx3
 
+logger = logging.getLogger(__name__)
+
 
 class Speaker:
     def __init__(self, **kwargs):
-        print(f"initializing audio engine with properties {kwargs}")
+        logger.info(f"initializing audio engine with properties {kwargs}")
         self.kwargs = kwargs
         self._init_engine()
 
@@ -19,18 +22,20 @@ class Speaker:
         rate = self.engine.getProperty("rate")
         words = len(text.split(" "))
         duration = words / rate * 60 + 1
-        print(f"sleeping {round(duration,3)} seconds while speaking {words} words")
+        logger.info(
+            f"sleeping {round(duration,3)} seconds while speaking {words} words"
+        )
         time.sleep(duration)
 
     def speak(self, text):
         try:
-            print("start speaking")
+            logger.info("start speaking")
             self.engine.say(text)
             self.engine.runAndWait()
             self._sleep_text(text)
-            print("stop speaking")
+            logger.info("stop speaking")
         except RuntimeError as e:
-            print(f'caught audio runtime error "{e}" -> restart audio engine')
+            logger.warning(f'caught audio runtime error "{e}" -> restart audio engine')
             self.engine.stop()
             self.engine.endLoop()
             self._init_engine()

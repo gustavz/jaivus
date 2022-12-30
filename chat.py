@@ -1,8 +1,11 @@
 import json
+import logging
 
 import openai
 from pyChatGPT import ChatGPT
 from revChatGPT.ChatGPT import Chatbot
+
+logger = logging.getLogger(__name__)
 
 SUPPORTED_CHATBOTS = ["openai", "pychatgpt", "revchatgpt"]
 
@@ -24,7 +27,7 @@ class OpenAIBot:
         openai.api_key = config["api_key"]
 
     def chat(self, prompt, engine="text-davinci-003"):
-        print("start chat")
+        logger.info("start chat")
         response = openai.Completion.create(
             engine=engine,
             prompt=prompt,
@@ -34,7 +37,7 @@ class OpenAIBot:
             frequency_penalty=0,
             presence_penalty=0,
         )
-        print(f"response: {response}")
+        logger.info(f"response: {response}")
         return response["choices"][0]["text"]
 
 
@@ -45,9 +48,9 @@ class PyChatGPTBot:
         self.bot.reset_conversation()
 
     def chat(self, prompt):
-        print("start chat")
+        logger.info("start chat")
         response = self.bot.send_message(prompt)
-        print(f"response: {response}")
+        logger.info(f"response: {response}")
         return response["message"]
 
 
@@ -59,7 +62,7 @@ class RevPyChatGPTBot:
         self.bot.refresh_session()
 
     def chat(self, prompt):
-        print("start chat")
+        logger.info("start chat")
         response = self.bot.ask(prompt)
-        print(f"response: {response}")
+        logger.info(f"response: {response}")
         return response["message"]

@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 import streamlit as st
@@ -6,6 +7,7 @@ from chat import SUPPORTED_CHATBOTS, get_chatbot
 from listen import SUPPORTED_RECOGNIZER, Listener
 from speak import Speaker
 
+logger = logging.getLogger(__name__)
 
 # Config defaults
 WAKE_WORD = "jarvis"
@@ -21,7 +23,7 @@ conversation = []
 def stop_app():
     global run_app
     run_app = False
-    print("stop the app")
+    logger.info("stop the app")
 
 
 ## Streamlit app header
@@ -42,7 +44,7 @@ with st.sidebar:
         # Submit button
         submitted = st.form_submit_button("Submit")
         if submitted:
-            print("config submitted")
+            logger.info("config submitted")
             st.text("config submitted")
             if api_key or session_token:
                 config = {"api_key": api_key, "session_token": session_token}
@@ -55,7 +57,7 @@ with st.sidebar:
 
 try:
     if start_app:
-        print(f"start the app")
+        logger.info(f"start the app")
         # Initialize engines
         listen = Listener(recognizer)
         speak = Speaker()
@@ -107,8 +109,8 @@ try:
 
 except Exception as e:
     # Error handling
-    print(f"app failed with: {e}")
+    logger.warning(f"app failed with: {e}")
     st.error(e, icon="🚨")
 
-print("reset the app")
+logger.info("reset the app")
 st.stop()
