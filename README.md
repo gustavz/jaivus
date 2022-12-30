@@ -7,8 +7,9 @@ Leveraging open source APIs to create a personal assistant chatbot
 
 ## Installation
 
-1. Install requirements: `pip install -r requirements.txt`
-2. Copy `config.json.example` to `config.json` and fill in OpenAI `api_key` and optionally `session_token`
+1. Optionally install system dependencies (Ubuntu): `xargs -a packages.txt sudo apt-get install` 
+2. Install python requirements: `pip install -r requirements.txt`
+3. Copy `config.json.example` to `config.json` and fill in OpenAI `api_key` and optionally `session_token`
 
 ## Usage
 
