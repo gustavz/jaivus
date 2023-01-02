@@ -13,37 +13,41 @@ SUPPORTED_CHATBOTS = ["openai", "pychatgpt", "revchatgpt"]
 def get_chatbot(bot="openai", config="config.json"):
     assert bot in SUPPORTED_CHATBOTS
     if bot == "openai":
-        return OpenAIBot(config)
+        return openAIBot(config)
     elif bot == "pychatgpt":
-        return PyChatGPTBot(config)
+        return pyChatGPTBot(config)
     elif bot == "revchatgpt":
-        return RevPyChatGPTBot(config)
+        return revPyChatGPTBot(config)
 
 
-class OpenAIBot:
+class openAIBot:
     def __init__(self, config="config.json"):
         if isinstance(config, str):
             config = json.load(open(config))
         openai.api_key = config["api_key"]
+        # Init openai parameters
+        self.parameters = {}
+        self.parameters["engine"] = config.get("engine", "text-davinci-003")
+        self.parameters["temperature"] = config.get("temperature", 0.5)
+        self.parameters["max_tokens"] = config.get("max_tokens", 1024)
+        self.parameters["top_p"] = config.get("top_p", 1)
+        self.parameters["frequency_penalty"] = config.get("frequency_penalty", 0)
+        self.parameters["presence_penalty"] = config.get("presence_penalty", 0)
 
-    def chat(self, prompt, engine="text-davinci-003"):
+    def chat(self, prompt):
         logger.info("start chat")
         response = openai.Completion.create(
-            engine=engine,
             prompt=prompt,
-            temperature=0.5,
-            max_tokens=1024,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0,
+            **self.parameters,
         )
         logger.info(f"response: {response}")
         return response["choices"][0]["text"]
 
 
-class PyChatGPTBot:
+class pyChatGPTBot:
     def __init__(self, config="config.json"):
-        config = json.load(open(config))
+        if isinstance(config, str):
+            config = json.load(open(config))
         self.bot = ChatGPT(config["session_token"])
         self.bot.reset_conversation()
 
@@ -54,9 +58,10 @@ class PyChatGPTBot:
         return response["message"]
 
 
-class RevPyChatGPTBot:
+class revPyChatGPTBot:
     def __init__(self, config="config.json"):
-        config = json.load(open(config))
+        if isinstance(config, str):
+            config = json.load(open(config))
         self.bot = Chatbot(config)
         self.bot.reset_chat()
         self.bot.refresh_session()

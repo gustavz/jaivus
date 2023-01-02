@@ -1,4 +1,5 @@
 streamlit
+gtts
 pychatgpt
 openai
 revchatgpt
@@ -6,4 +7,4 @@ pyttsx3
 pyaudio
 whisper
 speechrecognition
-streamlit_toggle
+streamlit-toggle-switch

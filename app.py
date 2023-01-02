@@ -7,7 +7,7 @@ import streamlit_toggle as tog
 
 from chat import SUPPORTED_CHATBOTS, get_chatbot
 from listen import SUPPORTED_RECOGNIZER, Listener
-from speak import Speaker
+from speak import SUPPORTED_SPEAKER, get_speaker
 
 logger = logging.getLogger(__name__)
 
@@ -21,11 +21,13 @@ WAKE_WORD = "jarvis"
 config = "config.json"
 recognizer = "google"
 chatbot = "openai"
+speaker = "pyttsx3"
 
 # Init parameter
 start_app = False
 run_app = True
 conversation = []
+session_token = None
 
 # Helper methods
 def stop_app():
@@ -51,10 +53,11 @@ with st.sidebar:
     # Config form
     with st.form("config"):
         api_key = st.text_input("Enter your API key", type="password")
-        session_token = st.text_input("Or enter your session token", type="password")
         if SESSION["advanced_settings"]:
+            session_token = st.text_input("Enter your session token", type="password")
             recognizer = st.selectbox("Choose a recoginzer", SUPPORTED_RECOGNIZER)
             chatbot = st.selectbox("Choose chatbot", SUPPORTED_CHATBOTS)
+            speaker = st.selectbox("Choose speaker", SUPPORTED_SPEAKER)
 
         # Submit button
         submitted = st.form_submit_button("Submit")
@@ -74,11 +77,6 @@ with st.sidebar:
         advanced_settings = tog.st_toggle_switch(
             label="Advanced Settings",
             key="advanced_settings",
-            default_value=False,
-            label_after=False,
-            inactive_color="#D3D3D3",
-            active_color="#11567f",
-            track_color="#29B5E8",
         )
 
 try:
@@ -86,7 +84,7 @@ try:
         logger.info(f"start the app")
         # Initialize engines
         listen = Listener(recognizer)
-        speak = Speaker()
+        speak = get_speaker(speaker)
         chat = get_chatbot(chatbot, config)
 
         # Wake-up instructions
