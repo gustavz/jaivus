@@ -6,3 +6,4 @@ pyttsx3
 pyaudio
 whisper
 speechrecognition
+streamlit_toggle

@@ -2,12 +2,19 @@ import logging
 from datetime import datetime
 
 import streamlit as st
+import streamlit_toggle as tog
+
 
 from chat import SUPPORTED_CHATBOTS, get_chatbot
 from listen import SUPPORTED_RECOGNIZER, Listener
 from speak import Speaker
 
 logger = logging.getLogger(__name__)
+
+# Init streamlit session and stateful parameters
+SESSION = st.session_state
+if "advanced_settings" not in SESSION:
+    SESSION["advanced_settings"] = False
 
 # Config defaults
 WAKE_WORD = "jarvis"
@@ -16,6 +23,7 @@ recognizer = "google"
 chatbot = "openai"
 
 # Init parameter
+start_app = False
 run_app = True
 conversation = []
 
@@ -28,21 +36,25 @@ def stop_app():
 
 ## Streamlit app header
 st.set_page_config(
-    page_title="jAIvus", page_icon="🧞", layout="centered", initial_sidebar_state="expanded"
+    page_title="jAIvus",
+    page_icon="🧞",
+    layout="centered",
+    initial_sidebar_state="expanded",
 )
 st.title("🧞 jAIvus")
 st.markdown("Submit your config to start the chat")
 
 ## Sidebar
-start_app = False
 with st.sidebar:
     st.image("logo.png")
+
     # Config form
     with st.form("config"):
         api_key = st.text_input("Enter your API key", type="password")
         session_token = st.text_input("Or enter your session token", type="password")
-        recognizer = st.selectbox("Choose a recoginzer", SUPPORTED_RECOGNIZER)
-        chatbot = st.selectbox("Choose chatbot", SUPPORTED_CHATBOTS)
+        if SESSION["advanced_settings"]:
+            recognizer = st.selectbox("Choose a recoginzer", SUPPORTED_RECOGNIZER)
+            chatbot = st.selectbox("Choose chatbot", SUPPORTED_CHATBOTS)
 
         # Submit button
         submitted = st.form_submit_button("Submit")
@@ -57,6 +69,17 @@ with st.sidebar:
         # Stop button
         cols = st.columns([1, 3])
         cols[0].button("Stop", on_click=stop_app)
+    else:
+        # Advanced Settings toggle
+        advanced_settings = tog.st_toggle_switch(
+            label="Advanced Settings",
+            key="advanced_settings",
+            default_value=False,
+            label_after=False,
+            inactive_color="#D3D3D3",
+            active_color="#11567f",
+            track_color="#29B5E8",
+        )
 
 try:
     if start_app:

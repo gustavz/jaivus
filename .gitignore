@@ -1,6 +1,6 @@
 # configs
 config*.json
-_test.py
+_test*.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
