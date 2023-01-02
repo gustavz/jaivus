@@ -6,33 +6,46 @@ import streamlit_toggle as tog
 
 
 from chat import SUPPORTED_CHATBOTS, get_chatbot
-from listen import SUPPORTED_RECOGNIZER, Listener
+from listen import SUPPORTED_RECOGNIZER, SUPPORTED_LISTENER, get_listener
 from speak import SUPPORTED_SPEAKER, get_speaker
 
 logger = logging.getLogger(__name__)
 
 # Init streamlit session and stateful parameters
 SESSION = st.session_state
+if "api_key" not in SESSION:
+    SESSION["api_key"] = None
+if "session_token" not in SESSION:
+    SESSION["session_token"] = None
 if "advanced_settings" not in SESSION:
     SESSION["advanced_settings"] = False
+if "start_app" not in SESSION:
+    SESSION["start_app"] = False
+if "run_app" not in SESSION:
+    SESSION["run_app"] = True
+if "recognizer" not in SESSION:
+    SESSION["recognizer"] = "google"
+if "chatbot" not in SESSION:
+    SESSION["chatbot"] = "openai"
+if "speaker" not in SESSION:
+    SESSION["speaker"] = "pyttsx3"
+if "listener" not in SESSION:
+    SESSION["listener"] = "web"
+if "config" not in SESSION:
+    SESSION["config"] = "config.json"
+if "conversation" not in SESSION:
+    SESSION["conversation"] = []
+
 
 # Config defaults
 WAKE_WORD = "jarvis"
-config = "config.json"
-recognizer = "google"
-chatbot = "openai"
-speaker = "pyttsx3"
 
-# Init parameter
-start_app = False
-run_app = True
-conversation = []
-session_token = None
 
 # Helper methods
 def stop_app():
-    global run_app
-    run_app = False
+    SESSION["start_app"] = False
+    SESSION["run_app"] = False
+    SESSION["conversation"] = []
     logger.info("stop the app")
 
 
@@ -44,34 +57,45 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 st.title("🧞 jAIvus")
-st.markdown("Submit your config to start the chat")
+status_indicator = st.empty()
+status_indicator.write("Submit your config to start the app")
 
-## Sidebar
+
+# Sidebar
 with st.sidebar:
     st.image("logo.png")
 
     # Config form
-    with st.form("config"):
-        api_key = st.text_input("Enter your API key", type="password")
+    with st.form("config_form"):
+        SESSION["api_key"] = st.text_input("Enter your API key", type="password")
         if SESSION["advanced_settings"]:
-            session_token = st.text_input("Enter your session token", type="password")
-            recognizer = st.selectbox("Choose a recoginzer", SUPPORTED_RECOGNIZER)
-            chatbot = st.selectbox("Choose chatbot", SUPPORTED_CHATBOTS)
-            speaker = st.selectbox("Choose speaker", SUPPORTED_SPEAKER)
+            SESSION["session_token"] = st.text_input(
+                "Enter your session token", type="password"
+            )
+            SESSION["recognizer"] = st.selectbox(
+                "Choose a recoginzer", SUPPORTED_RECOGNIZER
+            )
+            SESSION["chatbot"] = st.selectbox("Choose chatbot", SUPPORTED_CHATBOTS)
+            SESSION["speaker"] = st.selectbox("Choose speaker", SUPPORTED_SPEAKER)
+            SESSION["listener"] = st.selectbox("Choose listener", SUPPORTED_LISTENER)
 
         # Submit button
         submitted = st.form_submit_button("Submit")
         if submitted:
             logger.info("config submitted")
             st.text("config submitted")
-            if api_key or session_token:
-                config = {"api_key": api_key, "session_token": session_token}
-            start_app = True
+            if SESSION["api_key"] or SESSION["session_token"]:
+                SESSION["config"] = {
+                    "api_key": SESSION["api_key"],
+                    "session_token": SESSION["session_token"],
+                }
+            SESSION["start_app"] = True
+            SESSION["run_app"] = True
 
-    if start_app:
-        # Stop button
+    if SESSION["start_app"]:
+        # Reset button
         cols = st.columns([1, 3])
-        cols[0].button("Stop", on_click=stop_app)
+        cols[0].button("Reset", on_click=stop_app)
     else:
         # Advanced Settings toggle
         advanced_settings = tog.st_toggle_switch(
@@ -79,22 +103,27 @@ with st.sidebar:
             key="advanced_settings",
         )
 
+# Main screen
+if SESSION["start_app"]:
+    # Activate microphone
+    status_indicator.write("Select audio source and press 'Start'")
+    listen = get_listener(SESSION["listener"], SESSION["recognizer"])
+
 try:
-    if start_app:
-        logger.info(f"start the app")
+    if SESSION["start_app"] and listen.is_active:
+        logger.info(f"start the app with config {SESSION['config']}")
         # Initialize engines
-        listen = Listener(recognizer)
-        speak = get_speaker(speaker)
-        chat = get_chatbot(chatbot, config)
+        speak = get_speaker(SESSION["speaker"])
+        chat = get_chatbot(SESSION["chatbot"], SESSION["config"])
 
         # Wake-up instructions
         text = "Say the wake word to start the conversation:"
-        st.markdown(text + ' **"' + WAKE_WORD + '"** [ʤɑ́ːvɪs]')
+        status_indicator.write(text + ' **"' + WAKE_WORD + '"** [ʤɑ́ːvɪs]')
         speak.speak(text)
 
         # Wake-up Loop
         with st.spinner("**Listening.**"):
-            while run_app:
+            while SESSION["run_app"]:
                 # Record audio until the wake word is spoken
                 message = listen.listen()
                 if message is not None and WAKE_WORD.lower() in message.lower():
@@ -103,29 +132,29 @@ try:
         # Transition to conversation loop
         text = "Wake word detected. Starting conversation..."
         speak.speak(text)
-        st.write("**" + text + "**")
+        status_indicator.write("**" + text + "**")
 
         # Conversation Loop
         with st.spinner("**Speak now.**"):
-            while run_app:
+            while SESSION["run_app"]:
                 # Record audio until the speaker stops speaking
                 command = listen.listen()
                 if command is not None:
                     # Display the transcribed text
                     st.text("You:")
                     st.text(command)
-                    conversation.append(f"You: {command}")
+                    SESSION["conversation"].append(f"You: {command}")
 
                     # Get chatbot response and play it
                     response = chat.chat(command)
                     st.text("Jarvis:")
                     st.text(response)
-                    conversation.append(f"Jarvis: {response}")
+                    SESSION["conversation"].append(f"Jarvis: {response}")
                     speak.speak(response)
 
                     with st.sidebar:
                         # Download conversation button
-                        file = "\n".join(conversation)
+                        file = "\n".join(SESSION["conversation"])
                         file_name = f"jaivus_conversation_{str(datetime.now())}.txt"
                         cols[1].download_button(
                             "Download conversation", file, file_name

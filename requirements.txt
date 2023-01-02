@@ -1,4 +1,6 @@
 streamlit
+streamlit-toggle-switch
+streamlit-webrtc
 gtts
 pychatgpt
 openai
@@ -7,4 +9,5 @@ pyttsx3
 pyaudio
 whisper
 speechrecognition
-streamlit-toggle-switch
+pydub
+numpy

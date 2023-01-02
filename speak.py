@@ -29,11 +29,12 @@ def play_audio_bytes(data):
         <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
         </audio>
         """
-    container = st.empty()
-    container.markdown(
-        md,
-        unsafe_allow_html=True,
-    )
+    with st.sidebar:
+        container = st.empty()
+        container.markdown(
+            md,
+            unsafe_allow_html=True,
+        )
     return container
 
 
@@ -59,14 +60,17 @@ class gttsSpeaker:
         logger.info(f"initializing gtts audio engine")
 
     def speak(self, text):
-        logger.info("start speaking")
-        sound_file = BytesIO()
-        tts = gTTS(text, lang="en")
-        tts.write_to_fp(sound_file)
-        container = autoplay_audio(sound_file)
-        sleep_text(text)
-        container.empty()
-        logger.info("stop speaking")
+        try:
+            logger.info("start speaking")
+            sound_file = BytesIO()
+            tts = gTTS(text, lang="en")
+            tts.write_to_fp(sound_file)
+            container = autoplay_audio(sound_file)
+            sleep_text(text)
+            container.empty()
+            logger.info("stop speaking")
+        except Exception as e:
+            logger.warning(f"gtts failed to speak with: {e}")
 
 
 class pyttsx3Speaker:
@@ -84,17 +88,23 @@ class pyttsx3Speaker:
             self.engine.setProperty(key, value)
         self.rate = self.engine.getProperty("rate")
 
-    def speak(self, text):
+    def speak(self, text, save_to_file=False):
         try:
             logger.info("start speaking")
-            self.engine.save_to_file(text, self.TMP_FILE)
-            self.engine.runAndWait()
-            autoplay_audio(self.TMP_FILE)
-            sleep_text(text, self.rate)
+            if save_to_file:
+                self.engine.save_to_file(text, self.TMP_FILE)
+                self.engine.runAndWait()
+                container = autoplay_audio(self.TMP_FILE)
+                sleep_text(text, self.rate)
+                container.empty()
+            else:
+                self.engine.say(text)
+                self.engine.runAndWait()
+                sleep_text(text, self.rate)
             logger.info("stop speaking")
         except RuntimeError as e:
             logger.warning(f'caught audio runtime error "{e}" -> restart audio engine')
             self.engine.stop()
             self.engine.endLoop()
             self._init_engine()
-            self.speak(text)
+            self.speak(text, save_to_file)
