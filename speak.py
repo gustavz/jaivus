@@ -1,15 +1,13 @@
-import os
-import logging
-import time
-
 import base64
+import logging
+import os
+import time
+import uuid
+from io import BytesIO
 
+import pyttsx3
 import streamlit as st
 from gtts import gTTS
-import pyttsx3
-from io import BytesIO
-import uuid
-
 
 logger = logging.getLogger(__name__)
 

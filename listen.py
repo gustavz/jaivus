@@ -1,9 +1,9 @@
 import logging
-import time
 import queue
-import pydub
-import numpy as np
+import time
 
+import numpy as np
+import pydub
 import speech_recognition as sr
 from streamlit_webrtc import WebRtcMode, webrtc_streamer
 
