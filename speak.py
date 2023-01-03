@@ -13,7 +13,7 @@ import uuid
 
 logger = logging.getLogger(__name__)
 
-SUPPORTED_SPEAKER = ["pyttsx3", "gtts"]
+SUPPORTED_SPEAKER = ["gtts", "pyttsx3"]
 
 
 def get_speaker(speaker, **kwargs):
@@ -50,7 +50,7 @@ def autoplay_audio(audio_file):
             return play_audio_bytes(data)
 
 
-def sleep_text(text, rate=130):
+def sleep_text(text, rate=120):
     words = len(text.split(" "))
     duration = words / rate * 60 + 1
     logger.info(f"sleeping {round(duration,3)} seconds while speaking {words} words")
@@ -72,7 +72,7 @@ class GttsSpeaker:
             container.empty()
             logger.info("stop speaking")
         except Exception as e:
-            logger.warning(f"gtts failed to speak with: {e}")
+            logger.warning(f"gtts audio engine failed with: {e}")
 
 
 class Pyttsx3Speaker:
@@ -91,7 +91,7 @@ class Pyttsx3Speaker:
     def speak(self, text, save_to_file=True):
         try:
             logger.info("start speaking")
-            if save_to_file:
+            try:
                 audio_file = f"audio_{uuid.uuid4()}.mp3"
                 self.engine.save_to_file(text, audio_file)
                 self.engine.runAndWait()
@@ -99,13 +99,14 @@ class Pyttsx3Speaker:
                 sleep_text(text, self.rate)
                 container.empty()
                 os.remove(audio_file)
-            else:
+            except FileNotFoundError as e:
+                logger.warning(e)
                 self.engine.say(text)
                 self.engine.runAndWait()
                 sleep_text(text, self.rate)
             logger.info("stop speaking")
         except RuntimeError as e:
-            logger.warning(f'caught audio runtime error "{e}" -> restart audio engine')
+            logger.warning(f'pyttsx3 audio runtime error "{e}" -> restart audio engine')
             self.engine.stop()
             self.engine.endLoop()
             self._init_engine()

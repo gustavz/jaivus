@@ -1,3 +1,4 @@
+import os
 import logging
 from datetime import datetime
 
@@ -11,8 +12,12 @@ from speak import SUPPORTED_SPEAKER, get_speaker
 
 logger = logging.getLogger(__name__)
 
+# Config defaults
+WAKE_WORD = "jarvis"
+
 # Init streamlit session and stateful parameters
 SESSION = st.session_state
+
 if "api_key" not in SESSION:
     SESSION["api_key"] = None
 if "session_token" not in SESSION:
@@ -28,18 +33,13 @@ if "recognizer" not in SESSION:
 if "chatbot" not in SESSION:
     SESSION["chatbot"] = "openai"
 if "speaker" not in SESSION:
-    SESSION["speaker"] = "pyttsx3"
+    SESSION["speaker"] = "gtts"
 if "listener" not in SESSION:
     SESSION["listener"] = "web"
 if "config" not in SESSION:
     SESSION["config"] = "config.json"
 if "conversation" not in SESSION:
     SESSION["conversation"] = []
-
-
-# Config defaults
-WAKE_WORD = "jarvis"
-
 
 # Helper methods
 def stop_app():
@@ -59,6 +59,7 @@ st.set_page_config(
 st.title("🧞 jAIvus")
 status_indicator = st.empty()
 status_indicator.write("Submit your config to start the app")
+listener_indicator = st.empty()
 
 
 # Sidebar
@@ -67,30 +68,56 @@ with st.sidebar:
 
     # Config form
     with st.form("config_form"):
-        SESSION["api_key"] = st.text_input("Enter your API key", type="password")
+        SESSION["api_key"] = st.text_input(
+            "Enter your API key",
+            type="password",
+            help="OpenAI API key, needed if 'openai' chatbot is used",
+        )
         if SESSION["advanced_settings"]:
             SESSION["session_token"] = st.text_input(
-                "Enter your session token", type="password"
+                "Enter your session token",
+                type="password",
+                help="OpenAI session token, needed if any other chatbot than 'openai' is used",
+            )
+            SESSION["chatbot"] = st.selectbox(
+                "Choose chatbot",
+                SUPPORTED_CHATBOTS,
+                help="'openai' uses the model 'text-davinci-003' under the hood, the other chatbots directly invoke ChatGBT sessions",
+            )
+            SESSION["speaker"] = st.selectbox(
+                "Choose speaker",
+                SUPPORTED_SPEAKER,
+                help="the text-to-speech library to use",
             )
             SESSION["recognizer"] = st.selectbox(
-                "Choose a recoginzer", SUPPORTED_RECOGNIZER
+                "Choose a recoginzer",
+                SUPPORTED_RECOGNIZER,
+                help="the speech-to-text recognizer library to use",
             )
-            SESSION["chatbot"] = st.selectbox("Choose chatbot", SUPPORTED_CHATBOTS)
-            SESSION["speaker"] = st.selectbox("Choose speaker", SUPPORTED_SPEAKER)
-            SESSION["listener"] = st.selectbox("Choose listener", SUPPORTED_LISTENER)
+            SESSION["listener"] = st.selectbox(
+                "Choose listener",
+                SUPPORTED_LISTENER,
+                help="the audio engine driver to use, 'local' only works if app is deployed locally",
+            )
 
         # Submit button
         submitted = st.form_submit_button("Submit")
         if submitted:
             logger.info("config submitted")
             st.text("config submitted")
+            SESSION["start_app"] = True
+            SESSION["run_app"] = True
+
+            # Update config or stop app
             if SESSION["api_key"] or SESSION["session_token"]:
                 SESSION["config"] = {
                     "api_key": SESSION["api_key"],
                     "session_token": SESSION["session_token"],
                 }
-            SESSION["start_app"] = True
-            SESSION["run_app"] = True
+            elif not os.path.exists(SESSION["config"]):
+                st.error("You need to enter an API key or session token", icon="🚨")
+                SESSION["start_app"] = False
+                SESSION["run_app"] = False
 
     if SESSION["start_app"]:
         # Reset button
@@ -98,10 +125,7 @@ with st.sidebar:
         cols[0].button("Reset", on_click=stop_app)
     else:
         # Advanced Settings toggle
-        advanced_settings = tog.st_toggle_switch(
-            label="Advanced Settings",
-            key="advanced_settings",
-        )
+        tog.st_toggle_switch(label="Advanced Settings", key="advanced_settings")
 
 # Main screen
 try:
@@ -118,29 +142,32 @@ try:
 
         # Wake-up instructions
         text = "Say the wake word to start the conversation:"
-        status_indicator.write(text + ' **"' + WAKE_WORD + '"** [ʤɑ́ːvɪs]')
+        status_indicator.write(f'{text} **"{WAKE_WORD}"** [ʤɑ́ːvɪs]')
         speak.speak(text)
 
         # Wake-up Loop
         with st.spinner("**Listening.**"):
             while SESSION["run_app"]:
                 # Record audio until the wake word is spoken
-                message = listen.listen()
-                if message is not None and WAKE_WORD.lower() in message.lower():
-                    break
+                command = listen.listen(number_of_chunks=5000)
+                if command is not None:
+                    listener_indicator.write(f'I understood: "*{command}*"')
+                    if WAKE_WORD.lower() in command.lower():
+                        break
 
         # Transition to conversation loop
         text = "Wake word detected. Starting conversation..."
         speak.speak(text)
-        status_indicator.write("**" + text + "**")
-
+        status_indicator.write(f"**{text}**")
+        listener_indicator.empty()
         # Conversation Loop
         with st.spinner("**Speak now.**"):
             while SESSION["run_app"]:
                 # Record audio until the speaker stops speaking
-                command = listen.listen()
+                command = listen.listen(number_of_chunks=25000)
                 if command is not None:
                     # Display the transcribed text
+                    listener_indicator.write(f'I understood: "*{command}*"')
                     st.text("You:")
                     st.text(command)
                     SESSION["conversation"].append(f"You: {command}")
@@ -151,6 +178,7 @@ try:
                     st.text(response)
                     SESSION["conversation"].append(f"Jarvis: {response}")
                     speak.speak(response)
+                    listener_indicator.empty()
 
                     with st.sidebar:
                         # Download conversation button

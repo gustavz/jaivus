@@ -83,7 +83,7 @@ class LocalListener:
     def is_active(self):
         return True
 
-    def listen(self):
+    def listen(self, **kwargs):
         with sr.Microphone() as source:
             logger.info("start listening")
             audio = self.recognizer.listen(source)
