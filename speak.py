@@ -25,18 +25,14 @@ def get_speaker(speaker, **kwargs):
 def play_audio_bytes(data):
     b64 = base64.b64encode(data).decode()
     md = f"""
-        <audio controls autoplay="true">
+        <audio autoplay="true">
         <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
         </audio>
         """
-    with st.sidebar:
-        container = st.empty()
-        container.markdown(
-            md,
-            unsafe_allow_html=True,
-        )
-    return container
-
+    st.markdown(
+        md,
+        unsafe_allow_html=True,
+    )
 
 def autoplay_audio(audio_file):
     if isinstance(audio_file, BytesIO):
@@ -65,9 +61,8 @@ class GttsSpeaker:
             sound_file = BytesIO()
             tts = gTTS(text, lang="en")
             tts.write_to_fp(sound_file)
-            container = autoplay_audio(sound_file)
+            autoplay_audio(sound_file)
             sleep_text(text)
-            container.empty()
             logger.info("stop speaking")
         except Exception as e:
             logger.warning(f"gtts audio engine failed with: {e}")
@@ -94,9 +89,8 @@ class Pyttsx3Speaker:
                 logger.info(f"creating temp audio file: {audio_file}")
                 self.engine.save_to_file(text, audio_file)
                 self.engine.runAndWait()
-                container = autoplay_audio(audio_file)
+                autoplay_audio(audio_file)
                 sleep_text(text, self.rate)
-                container.empty()
                 os.remove(audio_file)
             except FileNotFoundError as e:
                 logger.warning(f"{e} -> fall back to using default sound engine")
