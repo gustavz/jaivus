@@ -32,9 +32,9 @@ SUPPORTED_RECOGNIZER = [
 def get_listener(listener, recognizer, **kwargs):
     assert listener in SUPPORTED_LISTENER
     if listener == "local":
-        return localListener(recognizer, **kwargs)
+        return LocalListener(recognizer, **kwargs)
     elif listener == "web":
-        return webListener(recognizer, **kwargs)
+        return WebListener(recognizer, **kwargs)
 
 
 class Streamer:
@@ -55,7 +55,7 @@ class Streamer:
         return self.streamer.state
 
     def empty(self):
-        self.streamer._frames_queue = queue.Queue(QUEUE_SIZE)
+        self.streamer.audio_receiver._frames_queue = queue.Queue(QUEUE_SIZE)
 
     def get_frames(self):
         try:
@@ -65,7 +65,7 @@ class Streamer:
             return []
 
 
-class localListener:
+class LocalListener:
     def __init__(self, recognizer="google", duration=2, **kwargs):
         assert recognizer in SUPPORTED_RECOGNIZER
         logger.info(f"initializing {recognizer} speech recognition engine")
@@ -109,9 +109,9 @@ class localListener:
             logger.warning(f"could not request results from recognizer")
 
 
-class webListener(localListener):
+class WebListener(LocalListener):
     def __init__(self, recognizer="google", **kwargs):
-        super(webListener, self).__init__(recognizer, duration=None, **kwargs)
+        super(WebListener, self).__init__(recognizer, duration=None, **kwargs)
         self.streamer = Streamer()
 
     @property

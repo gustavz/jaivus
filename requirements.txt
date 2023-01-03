@@ -10,4 +10,6 @@ pyaudio
 whisper
 speechrecognition
 pydub
-numpy
+pyopenssl
+Cryptography
+requests==2.11.1.

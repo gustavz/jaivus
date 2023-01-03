@@ -1,3 +1,4 @@
+import os
 import logging
 import time
 
@@ -7,6 +8,7 @@ import streamlit as st
 from gtts import gTTS
 import pyttsx3
 from io import BytesIO
+import uuid
 
 
 logger = logging.getLogger(__name__)
@@ -17,9 +19,9 @@ SUPPORTED_SPEAKER = ["pyttsx3", "gtts"]
 def get_speaker(speaker, **kwargs):
     assert speaker in SUPPORTED_SPEAKER
     if speaker == "pyttsx3":
-        return pyttsx3Speaker(**kwargs)
+        return Pyttsx3Speaker(**kwargs)
     if speaker == "gtts":
-        return gttsSpeaker(**kwargs)
+        return GttsSpeaker(**kwargs)
 
 
 def play_audio_bytes(data):
@@ -55,7 +57,7 @@ def sleep_text(text, rate=130):
     time.sleep(duration)
 
 
-class gttsSpeaker:
+class GttsSpeaker:
     def __init__(self, **kwargs):
         logger.info(f"initializing gtts audio engine")
 
@@ -73,9 +75,7 @@ class gttsSpeaker:
             logger.warning(f"gtts failed to speak with: {e}")
 
 
-class pyttsx3Speaker:
-    TMP_FILE = "audio.mp3"
-
+class Pyttsx3Speaker:
     def __init__(self, **kwargs):
         logger.info(f"initializing pyttsx3 audio engine with properties {kwargs}")
         self.kwargs = kwargs
@@ -88,15 +88,17 @@ class pyttsx3Speaker:
             self.engine.setProperty(key, value)
         self.rate = self.engine.getProperty("rate")
 
-    def speak(self, text, save_to_file=False):
+    def speak(self, text, save_to_file=True):
         try:
             logger.info("start speaking")
             if save_to_file:
-                self.engine.save_to_file(text, self.TMP_FILE)
+                audio_file = f"audio_{uuid.uuid4()}.mp3"
+                self.engine.save_to_file(text, audio_file)
                 self.engine.runAndWait()
-                container = autoplay_audio(self.TMP_FILE)
+                container = autoplay_audio(audio_file)
                 sleep_text(text, self.rate)
                 container.empty()
+                os.remove(audio_file)
             else:
                 self.engine.say(text)
                 self.engine.runAndWait()

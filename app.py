@@ -104,12 +104,12 @@ with st.sidebar:
         )
 
 # Main screen
-if SESSION["start_app"]:
-    # Activate microphone
-    status_indicator.write("Select audio source and press 'Start'")
-    listen = get_listener(SESSION["listener"], SESSION["recognizer"])
-
 try:
+    if SESSION["start_app"]:
+        # Activate microphone
+        status_indicator.write("Select audio source and press 'Start'")
+        listen = get_listener(SESSION["listener"], SESSION["recognizer"])
+
     if SESSION["start_app"] and listen.is_active:
         logger.info(f"start the app with config {SESSION['config']}")
         # Initialize engines

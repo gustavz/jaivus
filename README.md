@@ -1,4 +1,4 @@
-# 🧞 jAIvus [ʤɑ́ːvɪs]
+# [🧞 jAIvus](https://jaivus.streamlit.app/) [ʤɑ́ːvɪs]
 
 <img src="logo.png" height=200 width=200>
 
@@ -21,10 +21,10 @@ Run `run streamlit app.py`
 - [x] Add config options to the UI
 - [x] Add a stop button to the UI
 - [x] Add a download conversation button to the UI
-- [ ] Make the Stop button interruptive
+- [x] Make the Stop button interruptive
 - [ ] Make the download button not reset the app
 - [x] Add statefulness where it makes sense
 - [x] Host app on free cloud instance
 - [x] Enable hosted app to use browser audio and microphone
-- [ ] Fix web listener recognizing speaker words
+- [x] Fix web listener recognizing speaker words
 - [ ] Get rich or die trying

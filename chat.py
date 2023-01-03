@@ -13,14 +13,14 @@ SUPPORTED_CHATBOTS = ["openai", "pychatgpt", "revchatgpt"]
 def get_chatbot(bot="openai", config="config.json"):
     assert bot in SUPPORTED_CHATBOTS
     if bot == "openai":
-        return openAIBot(config)
+        return OpenAIBot(config)
     elif bot == "pychatgpt":
-        return pyChatGPTBot(config)
+        return PyChatGPTBot(config)
     elif bot == "revchatgpt":
-        return revPyChatGPTBot(config)
+        return RevPyChatGPTBot(config)
 
 
-class openAIBot:
+class OpenAIBot:
     def __init__(self, config="config.json"):
         if isinstance(config, str):
             config = json.load(open(config))
@@ -44,7 +44,7 @@ class openAIBot:
         return response["choices"][0]["text"]
 
 
-class pyChatGPTBot:
+class PyChatGPTBot:
     def __init__(self, config="config.json"):
         if isinstance(config, str):
             config = json.load(open(config))
@@ -58,7 +58,7 @@ class pyChatGPTBot:
         return response["message"]
 
 
-class revPyChatGPTBot:
+class RevPyChatGPTBot:
     def __init__(self, config="config.json"):
         if isinstance(config, str):
             config = json.load(open(config))
