@@ -12,12 +12,11 @@ from speak import SUPPORTED_SPEAKER, get_speaker
 
 logger = logging.getLogger(__name__)
 
-# Config defaults
-WAKE_WORD = "jarvis"
-
 # Init streamlit session and stateful parameters
 SESSION = st.session_state
 
+if "wake_word" not in SESSION:
+    SESSION["wake_word"] = None
 if "api_key" not in SESSION:
     SESSION["api_key"] = None
 if "session_token" not in SESSION:
@@ -40,6 +39,7 @@ if "config" not in SESSION:
     SESSION["config"] = "config.json"
 if "conversation" not in SESSION:
     SESSION["conversation"] = []
+
 
 # Helper methods
 def stop_app():
@@ -89,7 +89,7 @@ with st.sidebar:
             SESSION["speaker"] = st.selectbox(
                 "Choose speaker",
                 SUPPORTED_SPEAKER,
-                help="the text-to-speech library to use",
+                help="the text-to-speech library to use, if 'None' is selected, the app does not output any audio",
             )
             SESSION["recognizer"] = st.selectbox(
                 "Choose a recoginzer",
@@ -100,6 +100,10 @@ with st.sidebar:
                 "Choose listener",
                 SUPPORTED_LISTENER,
                 help="the audio engine driver to use, 'local' only works if app is deployed locally",
+            )
+            SESSION["wake_word"] = st.text_input(
+                "Enter a wake word",
+                help="a wake word to start the app",
             )
 
         # Submit button
@@ -142,32 +146,34 @@ try:
         speak = get_speaker(SESSION["speaker"])
         chat = get_chatbot(SESSION["chatbot"], SESSION["config"])
 
-        # Wake-up instructions
-        text = "Say the wake word to start the conversation:"
-        status_indicator.write(f'{text} **"{WAKE_WORD}"** [ʤɑ́ːvɪs]')
-        speak.speak(text)
-
         # Wake-up Loop
-        with st.spinner("**Listening.**"):
-            while SESSION["run_app"]:
-                # Record audio until the wake word is spoken
-                command = listen.listen(number_of_chunks=5000)
-                if command is not None:
-                    listener_indicator.write(f'I understood: "*{command}*"')
-                    if WAKE_WORD.lower() in command.lower():
-                        break
+        if SESSION["wake_word"]:
+            # Wake-up instructions
+            logger.info(f"waiting for wake word: {SESSION['wake_word']}")
+            text = "Say the wake word to start the conversation:"
+            status_indicator.write(f'{text} **"{SESSION["wake_word"]}"** [ʤɑ́ːvɪs]')
+            speak.speak(text)
 
-        # Transition to conversation loop
-        text = "Wake word detected. Starting conversation..."
-        speak.speak(text)
-        status_indicator.write(f"**{text}**")
-        listener_indicator.empty()
+            with st.spinner("**Listening.**"):
+                while SESSION["run_app"]:
+                    # Record audio until the wake word is spoken
+                    command = listen.listen(number_of_chunks=5000)
+                    if command is not None:
+                        listener_indicator.write(f'I understood: "*{command}*"')
+                        if SESSION["wake_word"] in command.lower():
+                            break
+
+            # Transition to conversation loop
+            text = "Wake word detected. Starting conversation..."
+            speak.speak(text)
+            status_indicator.write(f"**{text}**")
+            listener_indicator.empty()
 
         # Conversation Loop
         with st.spinner("**Speak now.**"):
             while SESSION["run_app"]:
                 # Record audio until the speaker stops speaking
-                command = listen.listen(number_of_chunks=20000)
+                command = listen.listen(number_of_chunks=15000)
                 if command is None:
                     listener_indicator.write("Sorry, I didn't understand this")
                     continue
@@ -185,12 +191,15 @@ try:
                 SESSION["conversation"].append(f"Jarvis: {response}")
                 speak.speak(response)
                 listener_indicator.empty()
-                
+
                 # Download conversation button
                 with st.sidebar:
                     file = "\n".join(SESSION["conversation"])
                     file_name = f"jaivus_conversation_{str(datetime.now())}.txt"
-                    download_button_str = download_button(file, file_name, "Download conversation")
+                    download_button_str = download_button(
+                        file, file_name, "Download conversation"
+                    )
+                    cols[1].empty()
                     cols[1].markdown(download_button_str, unsafe_allow_html=True)
 
 except Exception as e:

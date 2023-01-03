@@ -11,7 +11,7 @@ from gtts import gTTS
 
 logger = logging.getLogger(__name__)
 
-SUPPORTED_SPEAKER = ["gtts", "pyttsx3"]
+SUPPORTED_SPEAKER = ["gtts", "pyttsx3", None]
 
 
 def get_speaker(speaker, **kwargs):
@@ -19,7 +19,9 @@ def get_speaker(speaker, **kwargs):
     if speaker == "pyttsx3":
         return Pyttsx3Speaker(**kwargs)
     if speaker == "gtts":
-        return GttsSpeaker(**kwargs)
+        return GttsSpeaker()
+    if speaker is None:
+        return NoneSpeaker()
 
 
 def play_audio_bytes(data):
@@ -33,6 +35,7 @@ def play_audio_bytes(data):
         md,
         unsafe_allow_html=True,
     )
+
 
 def autoplay_audio(audio_file):
     if isinstance(audio_file, BytesIO):
@@ -51,8 +54,16 @@ def sleep_text(text, rate=120):
     time.sleep(duration)
 
 
+class NoneSpeaker:
+    def __init__(self):
+        pass
+
+    def speak(self, text):
+        pass
+
+
 class GttsSpeaker:
-    def __init__(self, **kwargs):
+    def __init__(self):
         logger.info(f"initializing gtts audio engine")
 
     def speak(self, text):
