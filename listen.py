@@ -7,6 +7,8 @@ import pydub
 import speech_recognition as sr
 from streamlit_webrtc import WebRtcMode, webrtc_streamer
 
+import patch
+
 logger = logging.getLogger(__name__)
 
 QUEUE_SIZE = 1024
@@ -51,8 +53,8 @@ class Streamer:
         )
 
     @property
-    def state(self):
-        return self.streamer.state
+    def playing(self):
+        return self.streamer.state.playing
 
     def empty(self):
         self.streamer.audio_receiver._frames_queue = queue.Queue(QUEUE_SIZE)
@@ -116,7 +118,7 @@ class WebListener(LocalListener):
 
     @property
     def is_active(self):
-        return self.streamer.state.playing
+        return self.streamer.playing
 
     def recognize_frames(self, audio_frames, sample_rate, sample_width):
         audio = sr.AudioData(audio_frames, sample_rate, sample_width)

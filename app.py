@@ -6,6 +6,7 @@ import streamlit as st
 import streamlit_toggle as tog
 
 from chat import SUPPORTED_CHATBOTS, get_chatbot
+from download import download_button
 from listen import SUPPORTED_LISTENER, SUPPORTED_RECOGNIZER, get_listener
 from speak import SUPPORTED_SPEAKER, get_speaker
 
@@ -42,6 +43,7 @@ if "conversation" not in SESSION:
 
 # Helper methods
 def stop_app():
+    # Callable for reset button
     SESSION["start_app"] = False
     SESSION["run_app"] = False
     SESSION["conversation"] = []
@@ -59,6 +61,7 @@ st.title("🧞 jAIvus")
 status_indicator = st.empty()
 status_indicator.write("Submit your config to start the app")
 listener_indicator = st.empty()
+spinner = st.empty()
 
 
 # Sidebar
@@ -159,33 +162,36 @@ try:
         speak.speak(text)
         status_indicator.write(f"**{text}**")
         listener_indicator.empty()
+
         # Conversation Loop
         with st.spinner("**Speak now.**"):
             while SESSION["run_app"]:
                 # Record audio until the speaker stops speaking
-                command = listen.listen(number_of_chunks=25000)
-                if command is not None:
-                    # Display the transcribed text
-                    listener_indicator.write(f'I understood: "*{command}*"')
-                    st.text("You:")
-                    st.text(command)
-                    SESSION["conversation"].append(f"You: {command}")
+                command = listen.listen(number_of_chunks=20000)
+                if command is None:
+                    listener_indicator.write("Sorry, I didn't understand this")
+                    continue
 
-                    # Get chatbot response and play it
-                    response = chat.chat(command)
-                    st.text("Jarvis:")
-                    st.text(response)
-                    SESSION["conversation"].append(f"Jarvis: {response}")
-                    speak.speak(response)
-                    listener_indicator.empty()
+                # Display the transcribed text
+                listener_indicator.write(f'I understood: "*{command}*"')
+                st.text("You:")
+                st.text(command)
+                SESSION["conversation"].append(f"You: {command}")
 
-                    with st.sidebar:
-                        # Download conversation button
-                        file = "\n".join(SESSION["conversation"])
-                        file_name = f"jaivus_conversation_{str(datetime.now())}.txt"
-                        cols[1].download_button(
-                            "Download conversation", file, file_name
-                        )
+                # Get chatbot response and play it
+                response = chat.chat(command)
+                st.text("Jarvis:")
+                st.text(response)
+                SESSION["conversation"].append(f"Jarvis: {response}")
+                speak.speak(response)
+                listener_indicator.empty()
+                
+                # Download conversation button
+                with st.sidebar:
+                    file = "\n".join(SESSION["conversation"])
+                    file_name = f"jaivus_conversation_{str(datetime.now())}.txt"
+                    download_button_str = download_button(file, file_name, "Download conversation")
+                    cols[1].markdown(download_button_str, unsafe_allow_html=True)
 
 except Exception as e:
     # Error handling

@@ -91,6 +91,7 @@ class Pyttsx3Speaker:
             logger.info("start speaking")
             try:
                 audio_file = f"audio_{uuid.uuid4()}.mp3"
+                logger.info(f"creating temp audio file: {audio_file}")
                 self.engine.save_to_file(text, audio_file)
                 self.engine.runAndWait()
                 container = autoplay_audio(audio_file)
@@ -98,7 +99,7 @@ class Pyttsx3Speaker:
                 container.empty()
                 os.remove(audio_file)
             except FileNotFoundError as e:
-                logger.warning(e)
+                logger.warning(f"{e} -> fall back to using default sound engine")
                 self.engine.say(text)
                 self.engine.runAndWait()
                 sleep_text(text, self.rate)
