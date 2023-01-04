@@ -96,7 +96,7 @@ class Pyttsx3Speaker:
         try:
             logger.info("start speaking")
             try:
-                audio_file = f"audio_{uuid.uuid4()}.mp3"
+                audio_file = f"{uuid.uuid4()}.mp3"
                 logger.info(f"creating temp audio file: {audio_file}")
                 self.engine.save_to_file(text, audio_file)
                 self.engine.runAndWait()

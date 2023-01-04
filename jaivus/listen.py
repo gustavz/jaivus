@@ -7,7 +7,7 @@ import pydub
 import speech_recognition as sr
 from streamlit_webrtc import WebRtcMode, webrtc_streamer
 
-import patch
+import jaivus.patch
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +74,8 @@ class LocalListener:
         self.recognizer = sr.Recognizer()
         self.recognizer_function_name = f"recognize_{recognizer}"
         self.kwargs = kwargs
+        self.start_time = time.time()
+        self.duration = duration
         if duration is not None:
             with sr.Microphone() as source:
                 logger.info(
@@ -83,7 +85,9 @@ class LocalListener:
 
     @property
     def is_active(self):
-        return True
+        if time.time() - self.start_time > self.duration:
+            return True
+        return False
 
     def listen(self, **kwargs):
         with sr.Microphone() as source:

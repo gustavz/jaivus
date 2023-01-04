@@ -5,10 +5,10 @@ from datetime import datetime
 import streamlit as st
 import streamlit_toggle as tog
 
-from chat import SUPPORTED_CHATBOTS, get_chatbot
-from download import download_button
-from listen import SUPPORTED_LISTENER, SUPPORTED_RECOGNIZER, get_listener
-from speak import SUPPORTED_SPEAKER, get_speaker
+from jaivus.chat import SUPPORTED_CHATBOTS, get_chatbot
+from jaivus.download import download_button
+from jaivus.listen import SUPPORTED_LISTENER, SUPPORTED_RECOGNIZER, get_listener
+from jaivus.speak import SUPPORTED_SPEAKER, get_speaker
 
 logger = logging.getLogger(__name__)
 
@@ -52,12 +52,12 @@ def stop_app():
 
 ## Streamlit app header
 st.set_page_config(
-    page_title="jAIvus",
+    page_title="jAIvus [ʤɑ́ːvɪs]",
     page_icon="🧞",
     layout="centered",
     initial_sidebar_state="expanded",
 )
-st.title("🧞 jAIvus")
+st.title("🧞 jAIvus [ʤɑ́ːvɪs]")
 status_indicator = st.empty()
 status_indicator.write("Submit your config to start the app")
 listener_indicator = st.empty()
@@ -84,26 +84,26 @@ with st.sidebar:
             SESSION["chatbot"] = st.selectbox(
                 "Choose chatbot",
                 SUPPORTED_CHATBOTS,
-                help="'openai' uses the model 'text-davinci-003' under the hood, the other chatbots directly invoke ChatGBT sessions",
+                help="'openai' uses the open source model 'text-davinci-003', the other chatbots directly invoke ChatGBT sessions",
             )
             SESSION["speaker"] = st.selectbox(
                 "Choose speaker",
                 SUPPORTED_SPEAKER,
-                help="the text-to-speech library to use, if 'None' is selected, the app does not output any audio",
+                help="the text-to-speech engine to use, if 'None' is selected, the app does not output any audio",
             )
             SESSION["recognizer"] = st.selectbox(
                 "Choose a recoginzer",
                 SUPPORTED_RECOGNIZER,
-                help="the speech-to-text recognizer library to use",
+                help="the speech-to-text engine to use",
             )
             SESSION["listener"] = st.selectbox(
                 "Choose listener",
                 SUPPORTED_LISTENER,
-                help="the audio engine driver to use, 'local' only works if app is deployed locally",
+                help="the audio driver to use, 'local' only works if app is deployed locally",
             )
             SESSION["wake_word"] = st.text_input(
                 "Enter a wake word",
-                help="a wake word to start the app",
+                help="an optional wake word to start the app",
             )
 
         # Submit button
@@ -127,8 +127,10 @@ with st.sidebar:
 
     if SESSION["start_app"]:
         # Reset button
-        cols = st.columns([1, 3])
-        cols[0].button("Reset", on_click=stop_app)
+        button_cols = st.columns([1, 3])
+        button_cols[0].button("Reset", on_click=stop_app)
+        # this exits the column, but otherwise download buttons are duplicated
+        button_cols[1] = st.empty()
     else:
         # Advanced Settings toggle
         tog.st_toggle_switch(label="Advanced Settings", key="advanced_settings")
@@ -136,13 +138,16 @@ with st.sidebar:
 # Main screen
 try:
     if SESSION["start_app"]:
-        # Activate microphone
-        status_indicator.write("Select audio source and press 'Start'")
+        # Activate web microphone
+        if SESSION["listener"] == "web":
+            status_indicator.write("**Select audio source and press 'Start'**")
+        else:
+            status_indicator.write("**Initializing engines...**")
         listen = get_listener(SESSION["listener"], SESSION["recognizer"])
 
     if SESSION["start_app"] and listen.is_active:
-        logger.info(f"start the app with config {SESSION['config']}")
         # Initialize engines
+        logger.info(f"start the app with config {SESSION['config']}")
         speak = get_speaker(SESSION["speaker"])
         chat = get_chatbot(SESSION["chatbot"], SESSION["config"])
 
@@ -151,7 +156,7 @@ try:
             # Wake-up instructions
             logger.info(f"waiting for wake word: {SESSION['wake_word']}")
             text = "Say the wake word to start the conversation:"
-            status_indicator.write(f'{text} **"{SESSION["wake_word"]}"** [ʤɑ́ːvɪs]')
+            status_indicator.write(f'{text} **"{SESSION["wake_word"]}"**')
             speak.speak(text)
 
             with st.spinner("**Listening.**"):
@@ -165,9 +170,11 @@ try:
 
             # Transition to conversation loop
             text = "Wake word detected. Starting conversation..."
-            speak.speak(text)
-            status_indicator.write(f"**{text}**")
-            listener_indicator.empty()
+        else:
+            text = "Starting conversation..."
+        speak.speak(text)
+        status_indicator.write(f"**{text}**")
+        listener_indicator.empty()
 
         # Conversation Loop
         with st.spinner("**Speak now.**"):
@@ -196,11 +203,10 @@ try:
                 with st.sidebar:
                     file = "\n".join(SESSION["conversation"])
                     file_name = f"jaivus_conversation_{str(datetime.now())}.txt"
-                    download_button_str = download_button(
+                    download_str = download_button(
                         file, file_name, "Download conversation"
                     )
-                    cols[1].empty()
-                    cols[1].markdown(download_button_str, unsafe_allow_html=True)
+                    button_cols[1].write(download_str, unsafe_allow_html=True)
 
 except Exception as e:
     # Error handling
