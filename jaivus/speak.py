@@ -11,7 +11,7 @@ from gtts import gTTS
 
 logger = logging.getLogger(__name__)
 
-SUPPORTED_SPEAKER = ["gtts", "pyttsx3", None]
+SUPPORTED_SPEAKER = [None, "gtts", "pyttsx3"]
 
 
 def get_speaker(speaker, **kwargs):

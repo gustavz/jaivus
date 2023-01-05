@@ -32,7 +32,7 @@ if "recognizer" not in SESSION:
 if "chatbot" not in SESSION:
     SESSION["chatbot"] = "openai"
 if "speaker" not in SESSION:
-    SESSION["speaker"] = "gtts"
+    SESSION["speaker"] = None
 if "listener" not in SESSION:
     SESSION["listener"] = "web"
 if "config" not in SESSION:
@@ -59,8 +59,9 @@ st.set_page_config(
 )
 st.title("🧞 jAIvus [ʤɑ́ːvɪs]")
 status_indicator = st.empty()
-status_indicator.write("Submit your config to start the app")
-listener_indicator = st.empty()
+status_indicator.write(
+    "Submit your config to start the app ( *I am silent by default* )"
+)
 spinner = st.empty()
 
 
@@ -89,7 +90,7 @@ with st.sidebar:
             SESSION["speaker"] = st.selectbox(
                 "Choose speaker",
                 SUPPORTED_SPEAKER,
-                help="the text-to-speech engine to use, if 'None' is selected, the app does not output any audio",
+                help="the text-to-speech engine to use. Currently only 'gtts' works for 'web' listener. Defaults to 'None' which is silent.",
             )
             SESSION["recognizer"] = st.selectbox(
                 "Choose a recoginzer",
@@ -140,9 +141,9 @@ try:
     if SESSION["start_app"]:
         # Activate web microphone
         if SESSION["listener"] == "web":
-            status_indicator.write("**Select audio source and press 'Start'**")
+            status_indicator.write("Select audio source and press **'Start'**")
         else:
-            status_indicator.write("**Initializing engines...**")
+            status_indicator.write("Initializing engines")
         listen = get_listener(SESSION["listener"], SESSION["recognizer"])
 
     if SESSION["start_app"] and listen.is_active:
@@ -159,34 +160,33 @@ try:
             status_indicator.write(f'{text} **"{SESSION["wake_word"]}"**')
             speak.speak(text)
 
-            with st.spinner("**Listening.**"):
+            with st.spinner("**Listening**"):
                 while SESSION["run_app"]:
                     # Record audio until the wake word is spoken
                     command = listen.listen(number_of_chunks=5000)
                     if command is not None:
-                        listener_indicator.write(f'I understood: "*{command}*"')
                         if SESSION["wake_word"] in command.lower():
                             break
 
             # Transition to conversation loop
-            text = "Wake word detected. Starting conversation..."
+            text = "Wake word detected, starting conversation"
         else:
-            text = "Starting conversation..."
+            text = "Starting conversation"
         speak.speak(text)
-        status_indicator.write(f"**{text}**")
-        listener_indicator.empty()
+        status_indicator.write(f"{text}")
 
         # Conversation Loop
-        with st.spinner("**Speak now.**"):
+        with st.spinner("**Conversation**"):
             while SESSION["run_app"]:
                 # Record audio until the speaker stops speaking
+                status_indicator.write("I am listening to you")
                 command = listen.listen(number_of_chunks=15000)
                 if command is None:
-                    listener_indicator.write("Sorry, I didn't understand this")
+                    status_indicator.write("Sorry, I didn't understand this")
                     continue
 
                 # Display the transcribed text
-                listener_indicator.write(f'I understood: "*{command}*"')
+                status_indicator.write(f'I am processing your command: "*{command}*"')
                 st.text("You:")
                 st.text(command)
                 SESSION["conversation"].append(f"You: {command}")
@@ -197,7 +197,6 @@ try:
                 st.text(response)
                 SESSION["conversation"].append(f"Jarvis: {response}")
                 speak.speak(response)
-                listener_indicator.empty()
 
                 # Download conversation button
                 with st.sidebar:
