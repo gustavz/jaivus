@@ -12,15 +12,15 @@ from jaivus.speak import SUPPORTED_SPEAKER, get_speaker
 
 logger = logging.getLogger(__name__)
 
+WAKE_WORD = "Jarvis"
+
 # Init streamlit session and stateful parameters
 SESSION = st.session_state
 
 if "wake_word" not in SESSION:
-    SESSION["wake_word"] = None
+    SESSION["wake_word"] = False
 if "api_key" not in SESSION:
     SESSION["api_key"] = None
-if "session_token" not in SESSION:
-    SESSION["session_token"] = None
 if "advanced_settings" not in SESSION:
     SESSION["advanced_settings"] = False
 if "start_app" not in SESSION:
@@ -39,6 +39,10 @@ if "config" not in SESSION:
     SESSION["config"] = "config.json"
 if "conversation" not in SESSION:
     SESSION["conversation"] = []
+if "local_mode" not in SESSION:
+    SESSION["local_mode"] = False
+if "mute" not in SESSION:
+    SESSION["mute"] = False
 
 
 # Helper methods
@@ -59,9 +63,7 @@ st.set_page_config(
 )
 st.title("🧞 jAIvus [ʤɑ́ːvɪs]")
 status_indicator = st.empty()
-status_indicator.write(
-    "Submit your config to start the app ( *I am silent by default* )"
-)
+status_indicator.write("Submit your config to start the app ( *muted by default* )")
 spinner = st.empty()
 
 
@@ -72,39 +74,25 @@ with st.sidebar:
     # Config form
     with st.form("config_form"):
         SESSION["api_key"] = st.text_input(
-            "Enter your API key",
+            "API key or Session token",
             type="password",
-            help="OpenAI API key, needed if 'openai' chatbot is used",
+            help="Uses the openai python api's 'text-davinci-003' model if the API key is provided, directly uses a running ChatGPT session if a session token is provided",
         )
         if SESSION["advanced_settings"]:
-            SESSION["session_token"] = st.text_input(
-                "Enter your session token",
-                type="password",
-                help="OpenAI session token, needed if any other chatbot than 'openai' is used",
+            SESSION["mute"] = st.checkbox(
+                "mute app",
+                value=True,
+                help="Mutes audio output",
             )
-            SESSION["chatbot"] = st.selectbox(
-                "Choose chatbot",
-                SUPPORTED_CHATBOTS,
-                help="'openai' uses the open source model 'text-davinci-003', the other chatbots directly invoke ChatGBT sessions",
+            SESSION["wake_word"] = st.checkbox(
+                "use wake word",
+                value=False,
+                help="Use wake word 'Jarvis' to initially start the conversation",
             )
-            SESSION["speaker"] = st.selectbox(
-                "Choose speaker",
-                SUPPORTED_SPEAKER,
-                help="the text-to-speech engine to use. Currently only 'gtts' works for 'web' listener. Defaults to 'None' which is silent.",
-            )
-            SESSION["recognizer"] = st.selectbox(
-                "Choose a recoginzer",
-                SUPPORTED_RECOGNIZER,
-                help="the speech-to-text engine to use",
-            )
-            SESSION["listener"] = st.selectbox(
-                "Choose listener",
-                SUPPORTED_LISTENER,
-                help="the audio driver to use, 'local' only works if app is deployed locally",
-            )
-            SESSION["wake_word"] = st.text_input(
-                "Enter a wake word",
-                help="an optional wake word to start the app",
+            SESSION["local_mode"] = st.checkbox(
+                "local mode",
+                value=False,
+                help="Experimental mode using different libraries, only works if app is deployed locally",
             )
 
         # Submit button
@@ -116,25 +104,44 @@ with st.sidebar:
             SESSION["run_app"] = True
 
             # Update config or stop app
-            if SESSION["api_key"] or SESSION["session_token"]:
-                SESSION["config"] = {
-                    "api_key": SESSION["api_key"],
-                    "session_token": SESSION["session_token"],
-                }
+            if SESSION["local_mode"]:
+                SESSION["listener"] = "local"
+                SESSION["speaker"] = "pyttsx3"
+            else:
+                SESSION["listener"] = "web"
+                SESSION["speaker"] = "gtts"
+            if SESSION["mute"]:
+                SESSION["speaker"] = None
+            if SESSION["api_key"]:
+                if len(SESSION["api_key"]) > 51:
+                    # SESSION TOKEN
+                    SESSION["config"] = {
+                        "session_token": SESSION["api_key"],
+                    }
+                    SESSION["chatbot"] = "revchatgpt"
+                    logger.info("Session token detected, using ChatGPT")
+                else:
+                    # API KEY
+                    SESSION["config"] = {
+                        "api_key": SESSION["api_key"],
+                    }
+                    logger.info(
+                        "API key detected, using openai python api's 'text-davinci-003' model"
+                    )
             elif not os.path.exists(SESSION["config"]):
-                st.error("You need to enter an API key or session token", icon="🚨")
+                st.error("You need to enter an API Key or Session Token", icon="🚨")
                 SESSION["start_app"] = False
                 SESSION["run_app"] = False
 
     if SESSION["start_app"]:
         # Reset button
-        button_cols = st.columns([1, 3])
-        button_cols[0].button("Reset", on_click=stop_app)
-        # this exits the column, but otherwise download buttons are duplicated
-        button_cols[1] = st.empty()
+        st.button("Reset", on_click=stop_app)
+        # Download button container
+        dowload_button = st.empty()
     else:
         # Advanced Settings toggle
         tog.st_toggle_switch(label="Advanced Settings", key="advanced_settings")
+
 
 # Main screen
 try:
@@ -155,9 +162,9 @@ try:
         # Wake-up Loop
         if SESSION["wake_word"]:
             # Wake-up instructions
-            logger.info(f"waiting for wake word: {SESSION['wake_word']}")
+            logger.info(f"waiting for wake word: {WAKE_WORD}")
             text = "Say the wake word to start the conversation:"
-            status_indicator.write(f'{text} **"{SESSION["wake_word"]}"**')
+            status_indicator.write(f'{text} **"{WAKE_WORD}"**')
             speak.speak(text)
 
             with st.spinner("**Listening**"):
@@ -165,7 +172,7 @@ try:
                     # Record audio until the wake word is spoken
                     command = listen.listen(number_of_chunks=5000)
                     if command is not None:
-                        if SESSION["wake_word"] in command.lower():
+                        if WAKE_WORD in command.lower():
                             break
 
             # Transition to conversation loop
@@ -205,7 +212,7 @@ try:
                     download_str = download_button(
                         file, file_name, "Download conversation"
                     )
-                    button_cols[1].write(download_str, unsafe_allow_html=True)
+                    dowload_button.write(download_str, unsafe_allow_html=True)
 
 except Exception as e:
     # Error handling
