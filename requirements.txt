@@ -4,7 +4,7 @@ streamlit==1.16.0
 streamlit-toggle-switch==1.0.2
 streamlit-webrtc==0.44.0
 pychatgpt==0.4.0
-revchatgpt==0.0.48.2
+revchatgpt==0.3.1
 pyttsx3==2.90
 pyaudio==0.2.13
 whisper==1.1.10
