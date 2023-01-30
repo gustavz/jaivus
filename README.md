@@ -14,18 +14,3 @@ Leveraging open source APIs to create a personal assistant chatbot
 ## Usage
 
 Run `run streamlit app.py`
-
-## To-dos
-
-- [x] Add logo to project and UI
-- [x] Add config options to the UI
-- [x] Add a stop button to the UI
-- [x] Add a download conversation button to the UI
-- [x] Make the Stop button interruptive
-- [x] Add statefulness where it makes sense
-- [x] Host app on free cloud instance
-- [x] Enable hosted app to use browser audio and microphone
-- [x] Fix web listener recognizing speaker words
-- [x] Make the download button not reset the app
-- [ ] Fix pyttsx3 save and load audio file
-- [ ] Get rich or die trying
