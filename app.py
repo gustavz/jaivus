@@ -42,7 +42,7 @@ if "conversation" not in SESSION:
 if "local_mode" not in SESSION:
     SESSION["local_mode"] = False
 if "mute" not in SESSION:
-    SESSION["mute"] = False
+    SESSION["mute"] = True
 
 
 # Helper methods
@@ -76,7 +76,7 @@ with st.sidebar:
         SESSION["api_key"] = st.text_input(
             "API key or Session token",
             type="password",
-            help="Uses the openai python api's 'text-davinci-003' model if the API key is provided, directly uses a running ChatGPT session if a session token is provided",
+            help="Uses the openai python api's 'text-davinci-003' model if the API key is provided, otherwise directly uses a running ChatGPT session if a session token is provided (currently only works in local mode)",
         )
         if SESSION["advanced_settings"]:
             SESSION["mute"] = st.checkbox(
@@ -114,6 +114,10 @@ with st.sidebar:
                 SESSION["speaker"] = None
             if SESSION["api_key"]:
                 if len(SESSION["api_key"]) > 51:
+                    if not SESSION["local_mode"]:
+                        st.error("Using ChatGPT Session tokens currently only works in local mode", icon="🚨")
+                        SESSION["start_app"] = False
+                        SESSION["run_app"] = False
                     # SESSION TOKEN
                     SESSION["config"] = {
                         "session_token": SESSION["api_key"],
@@ -125,6 +129,7 @@ with st.sidebar:
                     SESSION["config"] = {
                         "api_key": SESSION["api_key"],
                     }
+                    SESSION["chatbot"] = "openai"
                     logger.info(
                         "API key detected, using openai python api's 'text-davinci-003' model"
                     )

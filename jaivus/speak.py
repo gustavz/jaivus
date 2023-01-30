@@ -56,6 +56,7 @@ def sleep_text(text, rate=120):
 
 class NoneSpeaker:
     def __init__(self):
+        logger.info(f"No speaker selected, running app muted")
         pass
 
     def speak(self, text):

@@ -2,3 +2,6 @@ espeak
 ffmpeg
 portaudio19-dev
 python3-pyaudio
+chromium
+chromium-driver
+xvfb
