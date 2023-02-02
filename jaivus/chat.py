@@ -3,7 +3,7 @@ import logging
 
 import openai
 from pyChatGPT import ChatGPT
-from revChatGPT.ChatGPT import Chatbot
+from revChatGPT.Official import Chatbot
 
 logger = logging.getLogger(__name__)
 
@@ -62,12 +62,10 @@ class RevPyChatGPTBot:
     def __init__(self, config="config.json"):
         if isinstance(config, str):
             config = json.load(open(config))
-        self.bot = Chatbot(config)
-        self.bot.reset_chat()
-        self.bot.refresh_session()
+        self.bot = Chatbot(api_key=config['api_key'])
 
     def chat(self, prompt):
         logger.info("start chat")
         response = self.bot.ask(prompt)
         logger.info(f"response: {response}")
-        return response["message"]
+        return response["choices"][0]["text"]

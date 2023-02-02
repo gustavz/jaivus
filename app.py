@@ -43,6 +43,8 @@ if "local_mode" not in SESSION:
     SESSION["local_mode"] = False
 if "mute" not in SESSION:
     SESSION["mute"] = True
+if "use_chatgpt" not in SESSION:
+    SESSION["use_chatgpt"] = True
 
 
 # Helper methods
@@ -74,11 +76,16 @@ with st.sidebar:
     # Config form
     with st.form("config_form"):
         SESSION["api_key"] = st.text_input(
-            "API key or Session token",
+            "Enter your API key",
             type="password",
-            help="Uses the openai python api's 'text-davinci-003' model if the API key is provided, otherwise directly uses a running ChatGPT session if a session token is provided (currently only works in local mode)",
+            help="Enter your OpenAI API key, which can be found [here](https://platform.openai.com/account/api-keys)",
         )
         if SESSION["advanced_settings"]:
+            SESSION["use_chatgpt"] = st.checkbox(
+                "use chatgpt",
+                value=True,
+                help="Directly invokes ChatGPT when checked, otherwise uses openai's simpler 'text-davinci-003' model",
+            )
             SESSION["mute"] = st.checkbox(
                 "mute app",
                 value=True,
@@ -113,25 +120,16 @@ with st.sidebar:
             if SESSION["mute"]:
                 SESSION["speaker"] = None
             if SESSION["api_key"]:
-                if len(SESSION["api_key"]) > 51:
-                    if not SESSION["local_mode"]:
-                        st.error("Using ChatGPT Session tokens currently only works in local mode", icon="🚨")
-                        SESSION["start_app"] = False
-                        SESSION["run_app"] = False
-                    # SESSION TOKEN
-                    SESSION["config"] = {
-                        "session_token": SESSION["api_key"],
-                    }
-                    SESSION["chatbot"] = "revchatgpt"
-                    logger.info("Session token detected, using ChatGPT")
-                else:
-                    # API KEY
-                    SESSION["config"] = {
+                SESSION["config"] = {
                         "api_key": SESSION["api_key"],
                     }
+                if SESSION["use_chatgpt"]:
+                    SESSION["chatbot"] = "revchatgpt"
+                    logger.info("Using ChatGPT")
+                else:
                     SESSION["chatbot"] = "openai"
                     logger.info(
-                        "API key detected, using openai python api's 'text-davinci-003' model"
+                        "Using openai python api's 'text-davinci-003' model"
                     )
             elif not os.path.exists(SESSION["config"]):
                 st.error("You need to enter an API Key or Session Token", icon="🚨")
@@ -177,7 +175,7 @@ try:
                     # Record audio until the wake word is spoken
                     command = listen.listen(number_of_chunks=5000)
                     if command is not None:
-                        if WAKE_WORD in command.lower():
+                        if WAKE_WORD.lower() in command.lower():
                             break
 
             # Transition to conversation loop
