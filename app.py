@@ -5,10 +5,10 @@ from datetime import datetime
 import streamlit as st
 import streamlit_toggle as tog
 
-from jaivus.chat import SUPPORTED_CHATBOTS, get_chatbot
+from jaivus.chat import get_chatbot
 from jaivus.download import download_button
-from jaivus.listen import SUPPORTED_LISTENER, SUPPORTED_RECOGNIZER, get_listener
-from jaivus.speak import SUPPORTED_SPEAKER, get_speaker
+from jaivus.listen import get_listener
+from jaivus.speak import get_speaker
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +63,13 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="expanded",
 )
+# hide streamlit footer
+hide_streamlit_style = """
+            <style>
+            footer {visibility: hidden;}
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
 st.title("🧞 jAIvus [ʤɑ́ːvɪs]")
 status_indicator = st.empty()
 status_indicator.write("Submit your config to start the app ( *muted by default* )")
