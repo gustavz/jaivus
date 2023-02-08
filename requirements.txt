@@ -1,6 +1,6 @@
 openai==0.25.0
 gtts==2.3.0
-streamlit==1.16.0
+streamlit==1.17.0
 streamlit-toggle-switch==1.0.2
 streamlit-webrtc==0.44.2
 pychatgpt==0.4.0
