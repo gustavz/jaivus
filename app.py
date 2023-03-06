@@ -43,8 +43,6 @@ if "local_mode" not in SESSION:
     SESSION["local_mode"] = False
 if "mute" not in SESSION:
     SESSION["mute"] = True
-if "use_chatgpt" not in SESSION:
-    SESSION["use_chatgpt"] = True
 
 
 # Helper methods
@@ -81,11 +79,6 @@ with st.sidebar:
             help="Enter your OpenAI API key, which can be found [here](https://platform.openai.com/account/api-keys)",
         )
         if SESSION["advanced_settings"]:
-            SESSION["use_chatgpt"] = st.checkbox(
-                "use chatgpt",
-                value=True,
-                help="Directly invokes ChatGPT when checked, otherwise uses openai's simpler 'text-davinci-003' model",
-            )
             SESSION["mute"] = st.checkbox(
                 "mute app",
                 value=True,
@@ -121,18 +114,10 @@ with st.sidebar:
                 SESSION["speaker"] = None
             if SESSION["api_key"]:
                 SESSION["config"] = {
-                        "api_key": SESSION["api_key"],
-                    }
-                if SESSION["use_chatgpt"]:
-                    SESSION["chatbot"] = "revchatgpt"
-                    logger.info("Using ChatGPT")
-                else:
-                    SESSION["chatbot"] = "openai"
-                    logger.info(
-                        "Using openai python api's 'text-davinci-003' model"
-                    )
+                    "api_key": SESSION["api_key"],
+                }
             elif not os.path.exists(SESSION["config"]):
-                st.error("You need to enter an API Key or Session Token", icon="🚨")
+                st.error("You need to enter an API Key", icon="🚨")
                 SESSION["start_app"] = False
                 SESSION["run_app"] = False
 

@@ -62,7 +62,7 @@ class RevPyChatGPTBot:
     def __init__(self, config="config.json"):
         if isinstance(config, str):
             config = json.load(open(config))
-        self.bot = Chatbot(api_key=config['api_key'])
+        self.bot = Chatbot(api_key=config["api_key"])
 
     def chat(self, prompt):
         logger.info("start chat")
